@@ -31,3 +31,7 @@ logs/
 .vscode/
 .idea/
 *.swp
+
+# WhatsApp Web.js sessions (dentro do bot/)
+bot/.wwebjs_auth/
+bot/.wwebjs_cache/
