@@ -1,4 +1,3 @@
-import { prisma } from './prisma';
 import { FanData } from '@domain/fanData';
 import { publishToQueue } from '@queue/rabbitMQ';
 
@@ -14,13 +13,6 @@ export async function segmentarFan(userId: string, fan: FanData) {
   } else {
     cluster = 4;
   }
-
-  await prisma.fanSegment.create({
-    data: {
-      fan: { connect: { whatsapp_number: userId } },
-      cluster,
-    },
-  });
 
   let label = '';
   if (cluster === 1) label = 'Engajado';

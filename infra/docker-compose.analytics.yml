@@ -1,0 +1,54 @@
+services:
+  consumer_interacao:
+    build:
+      context: ../analytics
+    container_name: consumer_interacao
+    command: python consumers/interacao_consumer.py
+    env_file:
+      - ../analytics/.env
+    depends_on:
+      - rabbitmq
+      - postgres
+    restart: always
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  consumer_cadastro:
+    build:
+      context: ../analytics
+    container_name: consumer_cadastro
+    command: python consumers/cadastro_consumer.py
+    env_file:
+      - ../analytics/.env
+    depends_on:
+      - rabbitmq
+      - postgres
+    restart: always
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  consumer_segmentacao:
+    build:
+      context: ../analytics
+    container_name: consumer_segmentacao
+    command: python consumers/segmentar_fan_consumer.py
+    env_file:
+      - ../analytics/.env
+    depends_on:
+      - rabbitmq
+      - postgres
+    restart: always
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  alembic:
+    build:
+      context: ../analytics
+    container_name: alembic_migrator
+    env_file:
+      - ../analytics/.env
+    depends_on:
+      - postgres
+    working_dir: /app
+    volumes:
+      - ../analytics:/app

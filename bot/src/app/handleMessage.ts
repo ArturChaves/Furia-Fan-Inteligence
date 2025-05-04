@@ -2,23 +2,21 @@ import { Message } from 'whatsapp-web.js';
 import { userStates, userData, userLastSeen, TIMEOUT_MINUTES } from '@core/stateManager';
 import { isYes, isNo } from '@utils/respostaBooleana';
 import { validarCPF } from '@utils/validarCPF';
-import { prisma } from '@core/prisma';
 import { segmentarFan } from '@core/segmentarFan';
-import { registrarInteracao } from '@core/registrarInteracao';
 import { publishToQueue } from '@queue/rabbitMQ';
 
 async function safeReply(message: Message, text: string) {
-    try {
-      const chat = await message.getChat();
-      await chat.sendMessage(text);
-    } catch (err) {
-      if (err instanceof Error) {
-        console.error('❌ Erro ao enviar mensagem:', err.message);
-      } else {
-        console.error('❌ Erro desconhecido ao enviar mensagem:', err);
-      }
+  try {
+    const chat = await message.getChat();
+    await chat.sendMessage(text);
+  } catch (err) {
+    if (err instanceof Error) {
+      console.error('❌ Erro ao enviar mensagem:', err.message);
+    } else {
+      console.error('❌ Erro desconhecido ao enviar mensagem:', err);
     }
   }
+}
 
 export async function handleMessage(message: Message) {
   const userId = message.from;
@@ -74,7 +72,6 @@ export async function handleMessage(message: Message) {
       if (text.length > 2) {
         userData.set(userId, { nome: text });
         await safeReply(message, '🏙️ Massa! E de qual cidade você fala?');
-        await registrarInteracao(userId, 'Qual é o seu nome completo?', text);
         await publishToQueue('fan.interacao', {
           whatsapp_number: userId,
           question: 'Qual é o seu nome completo?',
@@ -96,7 +93,6 @@ export async function handleMessage(message: Message) {
             const current = userData.get(userId) || {};
             userData.set(userId, { ...current, cidade: text });
             await safeReply(message, '🔍 Agora, pra liberar benefícios exclusivos no futuro, você gostaria de informar seu CPF?\n(Se preferir não informar, é só digitar *pular*)');
-            await registrarInteracao(userId, 'De qual cidade você fala?', text);
             await publishToQueue('fan.interacao', {
               whatsapp_number: userId,
               question: 'De qual cidade você fala?',
@@ -119,7 +115,6 @@ export async function handleMessage(message: Message) {
         const current = userData.get(userId) || {};
         userData.set(userId, { ...current, cpf: null });
         await safeReply(message, 'Sem problemas! 🎮 Quer receber alertas sempre que a FURIA entrar em ação? (Sim/Não)');
-        await registrarInteracao(userId, 'Você gostaria de informar seu CPF?', 'pular');
         await publishToQueue('fan.interacao', {
           whatsapp_number: userId,
           question: 'Você gostaria de informar seu CPF?',
@@ -132,7 +127,6 @@ export async function handleMessage(message: Message) {
           const current = userData.get(userId) || {};
           userData.set(userId, { ...current, cpf: text });
           await safeReply(message, '✅ CPF ok! Agora vamos pra parte divertida.\n🎮 Quer receber alertas sempre que a FURIA entrar em ação? (Sim/Não)');
-          await registrarInteracao(userId, 'Você gostaria de informar seu CPF?', text);
           await publishToQueue('fan.interacao', {
             whatsapp_number: userId,
             question: 'Você gostaria de informar seu CPF?',
@@ -152,7 +146,6 @@ export async function handleMessage(message: Message) {
         const current = userData.get(userId) || {};
         userData.set(userId, { ...current, optinJogos: isYes(text) });
         await safeReply(message, '💥 E que tal promoções exclusivas e novidades da FURIA? Mando pra você? (Sim/Não)');
-        await registrarInteracao(userId, 'Quer receber alertas?', text);
         await publishToQueue('fan.interacao', {
           whatsapp_number: userId,
           question: 'Quer receber alertas?',
@@ -174,7 +167,6 @@ export async function handleMessage(message: Message) {
         const resumo = `📋 Confere aí se está tudo certo:\n\n👤 Nome: ${current.nome}\n🏙️ Cidade: ${current.cidade}\n📄 CPF: ${current.cpf ? 'Informado' : 'Não informado'}\n🎮 Alertas de jogos: ${jogosTexto}\n💥 Promoções: ${promocoesTexto}\n\nPosso concluir o cadastro? (Sim/Editar)`;
 
         await safeReply(message, resumo);
-        await registrarInteracao(userId, 'Deseja receber promoções?', text);
         await publishToQueue('fan.interacao', {
           whatsapp_number: userId,
           question: 'Deseja receber promoções?',
@@ -187,7 +179,6 @@ export async function handleMessage(message: Message) {
       break;
 
     case 'confirmacao_final':
-      await registrarInteracao(userId, 'Confirma os dados e deseja concluir?', text);
       await publishToQueue('fan.interacao', {
         whatsapp_number: userId,
         question: 'Confirma os dados e deseja concluir?',
@@ -196,24 +187,6 @@ export async function handleMessage(message: Message) {
       if (isYes(text)) {
         const current = userData.get(userId);
         if (current) {
-          await prisma.fan.upsert({
-            where: { whatsapp_number: userId },
-            update: {
-              nome: current.nome!,
-              cidade: current.cidade!,
-              cpf: current.cpf || undefined,
-              prefere_alerta_jogos: current.optinJogos!,
-              prefere_novidades: current.optinPromocoes!,
-            },
-            create: {
-              whatsapp_number: userId,
-              nome: current.nome!,
-              cidade: current.cidade!,
-              cpf: current.cpf || undefined,
-              prefere_alerta_jogos: current.optinJogos!,
-              prefere_novidades: current.optinPromocoes!,
-            },
-          })
           await publishToQueue('fan.cadastro_finalizado', {
             whatsapp_number: userId,
             nome: current.nome,
