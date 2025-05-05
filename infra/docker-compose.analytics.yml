@@ -1,0 +1,83 @@
+services:
+  consumer_interacao:
+    build:
+      context: ../analytics
+    container_name: consumer_interacao
+    command: python consumers/interacao_consumer.py
+    env_file:
+      - ../analytics/.env
+    depends_on:
+      - rabbitmq
+      - postgres
+    restart: always
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  consumer_cadastro:
+    build:
+      context: ../analytics
+    container_name: consumer_cadastro
+    command: python consumers/cadastro_consumer.py
+    env_file:
+      - ../analytics/.env
+    depends_on:
+      - rabbitmq
+      - postgres
+    restart: always
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  consumer_segmentacao:
+    build:
+      context: ../analytics
+    container_name: consumer_segmentacao
+    command: python consumers/segmentar_fan_consumer.py
+    env_file:
+      - ../analytics/.env
+    depends_on:
+      - rabbitmq
+      - postgres
+    restart: always
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  etl_worker:
+    build:
+      context: ../analytics
+    container_name: etl_worker
+    command: celery -A etl.worker worker --loglevel=info
+    env_file:
+      - ../analytics/.env
+    depends_on:
+      - rabbitmq
+      - postgres
+    volumes:
+      - ../analytics:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  alembic:
+    build:
+      context: ../analytics
+    container_name: alembic_migrator
+    env_file:
+      - ../analytics/.env
+    depends_on:
+      - postgres
+    working_dir: /app
+    volumes:
+      - ../analytics:/app
+
+  api:
+    build:
+      context: ../analytics
+    container_name: analytics_api
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000
+    volumes:
+      - ../analytics:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+    environment:
+      - PYTHONUNBUFFERED=1
