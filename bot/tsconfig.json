@@ -13,7 +13,8 @@
       "@utils/*": ["utils/*"],
       "@domain/*": ["domain/*"],
       "@queue/*": ["queue/*"]
-    }
+    },
+    "skipLibCheck": true
   },
   "exclude": ["node_modules", "dist", "tests"]
 }
