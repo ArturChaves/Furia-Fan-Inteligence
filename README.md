@@ -28,10 +28,10 @@ O projeto é composto por três grandes módulos:
 
 ## Dependências Necessárias
 
-- **Docker** e **Docker Compose** (recomendado: Docker Desktop)
+- **Docker** e **Docker Compose**
+- **Make** 
 - **Node.js** (v18+) e **npm** (para desenvolvimento do bot)
 - **Python** (3.11+) e **pip** (para desenvolvimento do analytics)
-- (Opcional) **Make** para comandos utilitários
 
 ---
 
@@ -46,47 +46,49 @@ cd Furia-Fan-Inteligence
 
 ### 2. Configure os arquivos `.env`
 
-- Copie os arquivos `.env.example` para `.env` em `analytics/` e `bot/` e ajuste as variáveis conforme necessário.
-
-### 3. Suba toda a infraestrutura com Docker Compose
+Copie os arquivos `.env.example` para `.env` em `analytics/` e `bot/`, e ajuste as variáveis conforme necessário.
 
 ```sh
-cd infra
-docker-compose -f docker-compose.yml -f docker-compose.analytics.yml up -d
+cp analytics/.env.example analytics/.env
+cp bot/.env.example bot/.env
 ```
-(ou make up se tiver ele instalado)
 
-Isso irá subir:
+### 3. Suba a infraestrutura com Docker Compose
+
+```sh
+make up
+```
+
+Isso irá subir os serviços de:
 - PostgreSQL
 - RabbitMQ
 - API analytics (FastAPI)
 - Celery worker
 - Consumers
-- Alembic (migrations)
-- (Adapte para incluir o bot se desejar rodar via container)
 
-### 4. Instale e rode o bot (WhatsApp)
+### 4. Rode as migrations no serviço de analytics
+
+```sh
+make migrate
+```
+
+Esse comando aplica as migrações do banco via Alembic.
+
+### 5. Rode o bot localmente
 
 Em outro terminal:
 
 ```sh
 cd bot
 npm install
-npx tsc
-npm start
+npm run dev
 ```
+
 - Escaneie o QR Code no WhatsApp para autenticar o bot.
 
-### 5. Acesse a API e teste os endpoints
+### 6. Acesse a API e teste os endpoints
 
 - Documentação Swagger: [http://localhost:8000/docs](http://localhost:8000/docs)
-- Teste endpoints de fãs, clusters, KPIs, notificações e acione o pipeline de clustering.
-
-### 6. Teste o fluxo completo
-
-- Interaja com o bot via WhatsApp.
-- Veja os dados sendo processados, segmentados e salvos.
-- Consulte os resultados via API ou diretamente no banco.
 
 ---
 
@@ -102,9 +104,9 @@ npm start
 
 ## Observações
 
-- Para produção, configure variáveis seguras, monitore recursos e rode workers/bot com usuários não-root.
-- O projeto está pronto para ser expandido com novos fluxos, integrações e automações.
-- Consulte os READMEs de cada módulo para detalhes específicos.
+- Para produção, utilize variáveis de ambiente seguras e execute os serviços com usuários não-root.
+- Todos os comandos utilizam `make` por padrão — veja o `Makefile` para opções adicionais.
+- Consulte os READMEs de cada módulo para instruções específicas.
 
 ---
 
