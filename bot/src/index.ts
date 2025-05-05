@@ -7,8 +7,6 @@ const client = new Client({
   puppeteer: { headless: false } // Para escanear o QR code no navegador
 });
 
-const AUTORIZADO = '5511987365509@c.us';
-
 client.on('qr', (qr) => {
   console.log('📱 Escaneie o QR Code com seu WhatsApp:\n', qr);
 });
@@ -28,8 +26,7 @@ client.on('message', async (message) => {
   if (
     !message.fromMe &&
     isNew &&
-    !message.from.includes('@g.us') &&
-    message.from === AUTORIZADO
+    !message.from.includes('@g.us')
   ) {
     try {
       await handleMessage(message);
