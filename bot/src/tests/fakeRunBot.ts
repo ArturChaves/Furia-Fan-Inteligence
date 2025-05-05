@@ -1,7 +1,7 @@
 import { handleMessage } from '@app/handleMessage';
 import { connectRabbitMQ, publishToQueue } from '@queue/rabbitMQ';
 
-const numeroFake = '95229107@c.us'; // número do fan fake pra teste
+const numeroFake = '91219999999@c.us'; // número do fan fake pra teste
 
 async function rodarFluxoFake() {
   const mockMsg = (body: string) =>
@@ -30,7 +30,6 @@ async function rodarFluxoFake() {
   }
 }
 
-// substitui setupFakeFan por envio direto para a fila, simulando a finalização de cadastro
 async function enviarCadastroFake() {
   await publishToQueue('fan.cadastro_finalizado', {
     whatsapp_number: numeroFake,
@@ -45,7 +44,11 @@ async function enviarCadastroFake() {
 
 async function main() {
   await connectRabbitMQ();
-  await enviarCadastroFake();  // usado no lugar do setupFakeFan()
+
+  // Espera curta para garantir que o canal esteja pronto (evita race condition)
+  await new Promise((resolve) => setTimeout(resolve, 300));
+
+  await enviarCadastroFake();
   await rodarFluxoFake();
 }
 

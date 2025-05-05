@@ -9,15 +9,7 @@ def processar_cadastro(ch, method, properties, body):
     try:
         data = json.loads(body.decode())
         print("📋 Novo cadastro recebido:")
-
-        salvar_cadastro(
-            whatsapp_number=data.get("whatsapp_number"),
-            nome=data.get("nome"),
-            cidade=data.get("cidade"),
-            cpf=data.get("cpf"),
-            prefere_alerta_jogos=data.get("optinJogos"),
-            prefere_novidades=data.get("optinPromocoes")
-        )
+        salvar_cadastro(data)  # Passa o dicionário inteiro, sem reatribuir campos
     except Exception as e:
         print(f"❌ Erro ao processar mensagem: {e}")
 

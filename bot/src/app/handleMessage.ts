@@ -1,5 +1,5 @@
 import { Message } from 'whatsapp-web.js';
-import { userStates, userData, userLastSeen, TIMEOUT_MINUTES } from '@core/stateManager';
+import { userStates, userData } from '@core/stateManager';
 import { isYes, isNo } from '@utils/respostaBooleana';
 import { validarCPF } from '@utils/validarCPF';
 import { segmentarFan } from '@core/segmentarFan';
@@ -21,14 +21,9 @@ async function safeReply(message: Message, text: string) {
 export async function handleMessage(message: Message) {
   const userId = message.from;
   const now = Date.now();
-  const lastSeen = userLastSeen.get(userId);
-  if (lastSeen && now - lastSeen > TIMEOUT_MINUTES * 60 * 1000) {
-    userStates.set(userId, 'inicio');
-    userData.delete(userId);
-    await safeReply(message, '⌛ Sua sessão expirou por inatividade. Vamos começar de novo? Envie "oi".');
-    return;
-  }
-  userLastSeen.set(userId, now);
+
+  // Timeout removido
+  // userLastSeen.set(userId, now);
 
   const text = message.body.toLowerCase().trim();
 

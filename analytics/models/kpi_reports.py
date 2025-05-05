@@ -4,7 +4,7 @@ from datetime import datetime
 import uuid
 
 class KPIReport(Base):
-    __tablename__ = "KPIReport"
+    __tablename__ = "kpi_report"
 
     id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
     data = Column(DateTime, nullable=False)

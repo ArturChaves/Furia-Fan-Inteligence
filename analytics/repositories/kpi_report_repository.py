@@ -1,6 +1,9 @@
 from sqlalchemy.orm import Session
+from sqlalchemy import desc
 from models.kpi_reports import KPIReport
 from datetime import datetime
+from typing import Optional, List
+
 
 def salvar_kpi_report(
     db: Session,
@@ -21,3 +24,12 @@ def salvar_kpi_report(
     db.commit()
     db.refresh(novo_relatorio)
     return novo_relatorio
+
+# 🔍 Consultas analíticas
+
+def listar_kpis(db: Session) -> List[KPIReport]:
+    return db.query(KPIReport).order_by(desc(KPIReport.data)).all()
+
+
+def obter_kpi_mais_recente(db: Session) -> Optional[KPIReport]:
+    return db.query(KPIReport).order_by(desc(KPIReport.data)).first()
